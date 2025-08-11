@@ -1,0 +1,386 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>QA Process Data - Công nghệ mì</title>
+    
+    <!-- PWA Meta Tags -->
+    <meta name="theme-color" content="#0078d4">
+    <link rel="manifest" href="manifest.json">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black">
+    <link rel="icon" type="image/png" sizes="192x192" href="icons/icon-192.png">
+    <link rel="apple-touch-icon" href="icons/icon-192.png">
+    
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    
+    <!-- Bootstrap Icons -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css">
+    
+    <!-- Custom CSS -->
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+    <!-- Loading Screen -->
+    <div id="loadingScreen" class="loading-screen">
+        <div class="spinner-border text-primary" role="status">
+            <span class="visually-hidden">Loading...</span>
+        </div>
+        <p class="mt-3">Đang tải ứng dụng...</p>
+    </div>
+
+    <!-- Login Screen -->
+    <div id="loginScreen" class="login-screen" style="display: none;">
+        <div class="container">
+            <div class="row justify-content-center align-items-center min-vh-100">
+                <div class="col-md-6 col-lg-4">
+                    <div class="card shadow">
+                        <div class="card-body p-4">
+                            <div class="text-center mb-4">
+                                <i class="bi bi-clipboard-data text-primary" style="font-size: 3rem;"></i>
+                                <h4 class="mt-3">QA Process Data</h4>
+                                <p class="text-muted">Công nghệ mì</p>
+                            </div>
+                            <button id="loginButton" class="btn btn-primary w-100">
+                                <i class="bi bi-microsoft me-2"></i>
+                                Đăng nhập với Microsoft
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Main App -->
+    <div id="mainApp" style="display: none;">
+        <!-- Navigation -->
+        <nav class="navbar navbar-expand-lg navbar-dark bg-primary sticky-top">
+            <div class="container-fluid">
+                <a class="navbar-brand" href="#">
+                    <i class="bi bi-clipboard-data me-2"></i>
+                    QA Process Data
+                </a>
+                <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                    <span class="navbar-toggler-icon"></span>
+                </button>
+                <div class="collapse navbar-collapse" id="navbarNav">
+                    <ul class="navbar-nav ms-auto">
+                        <li class="nav-item">
+                            <a class="nav-link" href="#" id="viewDataBtn">
+                                <i class="bi bi-table me-1"></i> Xem dữ liệu
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <span class="nav-link" id="userInfo">
+                                <i class="bi bi-person-circle me-1"></i>
+                                <span id="userName">Loading...</span>
+                            </span>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="#" id="logoutBtn">
+                                <i class="bi bi-box-arrow-right me-1"></i> Đăng xuất
+                            </a>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        </nav>
+
+        <!-- Main Content -->
+        <div class="container-fluid py-3">
+            <!-- Form Section -->
+            <div id="formSection">
+                <div class="card">
+                    <div class="card-header bg-white">
+                        <h5 class="mb-0">
+                            <i class="bi bi-pencil-square me-2"></i>
+                            Nhập dữ liệu kiểm tra
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <form id="processDataForm">
+                            <!-- Basic Information -->
+                            <div class="row mb-3">
+                                <div class="col-md-6 mb-3">
+                                    <label class="form-label">Site <span class="text-danger">*</span></label>
+                                    <select class="form-select" id="site" required>
+                                        <option value="">Chọn site...</option>
+                                        <option value="MMB">MMB</option>
+                                        <option value="MSI">MSI</option>
+                                        <option value="MHD">MHD</option>
+                                        <option value="MHG">MHG</option>
+                                    </select>
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    <label class="form-label">Mã nhân viên QA <span class="text-danger">*</span></label>
+                                    <input type="text" class="form-control" id="maNhanVien" required>
+                                </div>
+                            </div>
+
+                            <div class="row mb-3">
+                                <div class="col-md-6 mb-3">
+                                    <label class="form-label">Line SX <span class="text-danger">*</span></label>
+                                    <select class="form-select" id="lineSX" required>
+                                        <option value="">Chọn line...</option>
+                                        <option value="L1">L1</option>
+                                        <option value="L2">L2</option>
+                                        <option value="L3">L3</option>
+                                        <option value="L4">L4</option>
+                                        <option value="L5">L5</option>
+                                        <option value="L6">L6</option>
+                                        <option value="L7">L7</option>
+                                        <option value="L8">L8</option>
+                                    </select>
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    <label class="form-label">Mã ĐKSX <span class="text-danger">*</span></label>
+                                    <select class="form-select" id="maDKSX" required>
+                                        <option value="">Chọn mã ĐKSX...</option>
+                                    </select>
+                                    <small class="text-muted">Sản phẩm: <span id="productName">-</span></small>
+                                </div>
+                            </div>
+
+                            <!-- Kansui Section -->
+                            <h6 class="border-bottom pb-2 mb-3">Thông số Kansui</h6>
+                            <div class="row mb-3">
+                                <div class="col-md-4 mb-3">
+                                    <label class="form-label">Brix Kansui</label>
+                                    <input type="number" class="form-control" id="brixKansui" step="0.1" min="0">
+                                    <small class="text-muted">Range: <span id="brixKansuiRange">-</span></small>
+                                </div>
+                                <div class="col-md-4 mb-3">
+                                    <label class="form-label">Nhiệt độ Kansui (°C)</label>
+                                    <input type="number" class="form-control" id="nhietDoKansui" step="0.1" min="0">
+                                    <small class="text-muted">Range: <span id="nhietKansuiRange">-</span></small>
+                                </div>
+                                <div class="col-md-4 mb-3">
+                                    <label class="form-label">Ngoại quan Kansui</label>
+                                    <select class="form-select" id="ngoaiQuanKansui">
+                                        <option value="">Chọn...</option>
+                                        <option value="Đạt">Đạt</option>
+                                        <option value="Không đạt">Không đạt</option>
+                                    </select>
+                                </div>
+                            </div>
+
+                            <!-- Seasoning Section -->
+                            <h6 class="border-bottom pb-2 mb-3">Thông số Seasoning</h6>
+                            <div class="row mb-3">
+                                <div class="col-md-4 mb-3">
+                                    <label class="form-label">Brix Seasoning</label>
+                                    <input type="number" class="form-control" id="brixSeasoning" step="0.1" min="0">
+                                    <small class="text-muted">Range: <span id="brixSeaRange">-</span></small>
+                                </div>
+                                <div class="col-md-4 mb-3">
+                                    <label class="form-label">Ngoại quan Seasoning</label>
+                                    <select class="form-select" id="ngoaiQuanSeasoning">
+                                        <option value="">Chọn...</option>
+                                        <option value="Đạt">Đạt</option>
+                                        <option value="Không đạt">Không đạt</option>
+                                    </select>
+                                </div>
+                                <div class="col-md-4 mb-3">
+                                    <label class="form-label">Độ dày lá bột (lô tinh)</label>
+                                    <input type="number" class="form-control" id="doDayLaBot" step="0.01" min="0">
+                                    <small class="text-muted">Range: <span id="doDayRange">-</span></small>
+                                </div>
+                            </div>
+
+                            <!-- Temperature Section -->
+                            <h6 class="border-bottom pb-2 mb-3">Nhiệt độ chiên</h6>
+                            <div class="row mb-3">
+                                <div class="col-6 col-md-3 mb-3">
+                                    <label class="form-label">Đầu trái</label>
+                                    <input type="number" class="form-control" id="nhietDauTrai" step="0.1">
+                                </div>
+                                <div class="col-6 col-md-3 mb-3">
+                                    <label class="form-label">Đầu phải</label>
+                                    <input type="number" class="form-control" id="nhietDauPhai" step="0.1">
+                                </div>
+                                <div class="col-6 col-md-3 mb-3">
+                                    <label class="form-label">Giữa 1 trái</label>
+                                    <input type="number" class="form-control" id="nhietGiua1Trai" step="0.1">
+                                </div>
+                                <div class="col-6 col-md-3 mb-3">
+                                    <label class="form-label">Giữa 1 phải</label>
+                                    <input type="number" class="form-control" id="nhietGiua1Phai" step="0.1">
+                                </div>
+                                <div class="col-6 col-md-3 mb-3">
+                                    <label class="form-label">Giữa 2 trái</label>
+                                    <input type="number" class="form-control" id="nhietGiua2Trai" step="0.1">
+                                </div>
+                                <div class="col-6 col-md-3 mb-3">
+                                    <label class="form-label">Giữa 2 phải</label>
+                                    <input type="number" class="form-control" id="nhietGiua2Phai" step="0.1">
+                                </div>
+                                <div class="col-6 col-md-3 mb-3">
+                                    <label class="form-label">Giữa 3 trái</label>
+                                    <input type="number" class="form-control" id="nhietGiua3Trai" step="0.1">
+                                </div>
+                                <div class="col-6 col-md-3 mb-3">
+                                    <label class="form-label">Giữa 3 phải</label>
+                                    <input type="number" class="form-control" id="nhietGiua3Phai" step="0.1">
+                                </div>
+                                <div class="col-6 col-md-3 mb-3">
+                                    <label class="form-label">Cuối trái</label>
+                                    <input type="number" class="form-control" id="nhietCuoiTrai" step="0.1">
+                                </div>
+                                <div class="col-6 col-md-3 mb-3">
+                                    <label class="form-label">Cuối phải</label>
+                                    <input type="number" class="form-control" id="nhietCuoiPhai" step="0.1">
+                                </div>
+                            </div>
+
+                            <!-- Sensory Evaluation -->
+                            <h6 class="border-bottom pb-2 mb-3">Đánh giá cảm quan</h6>
+                            <div class="row mb-3">
+                                <div class="col-md-3 mb-3">
+                                    <label class="form-label">Cơ tính sợi</label>
+                                    <select class="form-select" id="camQuanCoTinh">
+                                        <option value="">Chọn...</option>
+                                        <option value="8.9">8.9</option>
+                                        <option value="9.0">9.0</option>
+                                        <option value="9.1">9.1</option>
+                                        <option value="9.2">9.2</option>
+                                        <option value="9.3">9.3</option>
+                                        <option value="9.4">9.4</option>
+                                        <option value="9.5">9.5</option>
+                                        <option value="9.6">9.6</option>
+                                        <option value="9.7">9.7</option>
+                                        <option value="9.8">9.8</option>
+                                    </select>
+                                </div>
+                                <div class="col-md-3 mb-3">
+                                    <label class="form-label">Màu sắc</label>
+                                    <select class="form-select" id="camQuanMau">
+                                        <option value="">Chọn...</option>
+                                        <option value="8.9">8.9</option>
+                                        <option value="9.0">9.0</option>
+                                        <option value="9.1">9.1</option>
+                                        <option value="9.2">9.2</option>
+                                        <option value="9.3">9.3</option>
+                                        <option value="9.4">9.4</option>
+                                        <option value="9.5">9.5</option>
+                                        <option value="9.6">9.6</option>
+                                        <option value="9.7">9.7</option>
+                                        <option value="9.8">9.8</option>
+                                    </select>
+                                </div>
+                                <div class="col-md-3 mb-3">
+                                    <label class="form-label">Mùi</label>
+                                    <select class="form-select" id="camQuanMui">
+                                        <option value="">Chọn...</option>
+                                        <option value="8.9">8.9</option>
+                                        <option value="9.0">9.0</option>
+                                        <option value="9.1">9.1</option>
+                                        <option value="9.2">9.2</option>
+                                        <option value="9.3">9.3</option>
+                                        <option value="9.4">9.4</option>
+                                        <option value="9.5">9.5</option>
+                                        <option value="9.6">9.6</option>
+                                        <option value="9.7">9.7</option>
+                                        <option value="9.8">9.8</option>
+                                    </select>
+                                </div>
+                                <div class="col-md-3 mb-3">
+                                    <label class="form-label">Vị</label>
+                                    <select class="form-select" id="camQuanVi">
+                                        <option value="">Chọn...</option>
+                                        <option value="8.9">8.9</option>
+                                        <option value="9.0">9.0</option>
+                                        <option value="9.1">9.1</option>
+                                        <option value="9.2">9.2</option>
+                                        <option value="9.3">9.3</option>
+                                        <option value="9.4">9.4</option>
+                                        <option value="9.5">9.5</option>
+                                        <option value="9.6">9.6</option>
+                                        <option value="9.7">9.7</option>
+                                        <option value="9.8">9.8</option>
+                                    </select>
+                                </div>
+                            </div>
+
+                            <!-- Submit Buttons -->
+                            <div class="d-flex gap-2 justify-content-end">
+                                <button type="button" class="btn btn-secondary" id="resetBtn">
+                                    <i class="bi bi-arrow-clockwise me-2"></i>Làm mới
+                                </button>
+                                <button type="submit" class="btn btn-primary">
+                                    <i class="bi bi-save me-2"></i>Lưu dữ liệu
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Data View Section (Hidden by default) -->
+            <div id="dataSection" style="display: none;">
+                <div class="card">
+                    <div class="card-header bg-white">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <h5 class="mb-0">
+                                <i class="bi bi-table me-2"></i>
+                                Dữ liệu đã nhập
+                            </h5>
+                            <button class="btn btn-primary btn-sm" id="backToFormBtn">
+                                <i class="bi bi-plus-circle me-1"></i>Nhập mới
+                            </button>
+                        </div>
+                    </div>
+                    <div class="card-body">
+                        <div class="table-responsive">
+                            <table class="table table-hover" id="dataTable">
+                                <thead>
+                                    <tr>
+                                        <th>Thời gian</th>
+                                        <th>Site</th>
+                                        <th>Line</th>
+                                        <th>Sản phẩm</th>
+                                        <th>Mã ĐKSX</th>
+                                        <th>Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="dataTableBody">
+                                    <!-- Data will be loaded here -->
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Toast Container -->
+    <div class="toast-container position-fixed bottom-0 end-0 p-3">
+        <div id="toast" class="toast" role="alert">
+            <div class="toast-header">
+                <strong class="me-auto" id="toastTitle">Notification</strong>
+                <button type="button" class="btn-close" data-bs-dismiss="toast"></button>
+            </div>
+            <div class="toast-body" id="toastMessage">
+                Message here
+            </div>
+        </div>
+    </div>
+
+    <!-- Offline Indicator -->
+    <div class="offline-indicator" id="offlineIndicator">
+        <i class="bi bi-wifi-off me-2"></i>Đang làm việc offline
+    </div>
+
+    <!-- Scripts -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://alcdn.msauth.net/browser/2.30.0/js/msal-browser.min.js"></script>
+    <script src="js/config.js"></script>
+    <script src="js/auth.js"></script>
+    <script src="js/sharepoint.js"></script>
+    <script src="js/form.js"></script>
+    <script src="js/app.js"></script>
+</body>
+</html>
