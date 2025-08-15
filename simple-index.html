@@ -1,0 +1,455 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>QA MMB - Simple Test</title>
+    
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    <link rel="stylesheet" href="css/modern-style.css">
+</head>
+<body>
+    <!-- Main App Without Login -->
+    <div id="mainApp">
+        <div class="modern-sidebar" id="sidebar">
+            <div class="sidebar-header">
+                <div class="logo-container">
+                    <i class="bi bi-clipboard-pulse"></i>
+                    <div class="logo-text">
+                        <h5>QA System</h5>
+                        <small>Simple Test Mode</small>
+                    </div>
+                </div>
+                <span class="badge bg-warning ms-auto">TEST</span>
+            </div>
+            
+            <nav class="sidebar-nav" id="sidebarNav">
+                <div class="nav-section">
+                    <div class="nav-section-title">TEST MENU</div>
+                    <a href="#" class="nav-link active" data-page="process-data">
+                        <i class="bi bi-clipboard-data"></i>
+                        <span>Data công nghệ mì</span>
+                    </a>
+                </div>
+            </nav>
+            
+            <div class="sidebar-footer">
+                <div class="user-profile">
+                    <i class="bi bi-person-circle"></i>
+                    <div class="user-info">
+                        <span class="user-name">Test User</span>
+                        <span class="user-role">Developer</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="main-wrapper" id="mainWrapper">
+            <div class="top-bar" id="topBar">
+                <button class="menu-toggle" id="menuToggle">
+                    <i class="bi bi-list"></i>
+                </button>
+                
+                <div class="breadcrumb-wrapper">
+                    <nav aria-label="breadcrumb">
+                        <ol class="breadcrumb mb-0" id="breadcrumb">
+                            <li class="breadcrumb-item"><i class="bi bi-house"></i></li>
+                            <li class="breadcrumb-item active" id="currentPage">Data công nghệ mì</li>
+                        </ol>
+                    </nav>
+                </div>
+                
+                <div class="top-bar-actions">
+                    <button class="btn btn-icon btn-success" onclick="testExcelData()">
+                        <i class="bi bi-check-circle"></i>
+                    </button>
+                </div>
+            </div>
+            
+            <div class="content-container" id="contentContainer">
+                <div class="alert alert-info">
+                    <h5><i class="bi bi-info-circle me-2"></i>Simple Test Mode</h5>
+                    <p>Testing Excel integration without authentication. Click the green button to test Excel data loading.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    
+    <!-- Simplified Employee Manager -->
+    <script>
+        // Simple mock employee manager
+        window.employeeManager = {
+            currentUser: {
+                id: "TEST001",
+                name: "Test User",
+                site: "MMB",
+                group: "Mì", 
+                role: "Quản lý"
+            },
+            isAuthenticated: () => true,
+            isManager: () => true,
+            hasPermission: () => true,
+            getCurrentUser: () => window.employeeManager.currentUser,
+            getEmployeesBySite: (site) => [window.employeeManager.currentUser],
+            employees: [
+                {
+                    id: "TEST001",
+                    name: "Test User",
+                    site: "MMB",
+                    group: "Mì",
+                    role: "Quản lý",
+                    active: true,
+                    password: "123",
+                    permissions: ["read", "write", "delete", "admin"]
+                }
+            ]
+        };
+    </script>
+
+    <!-- Fixed Excel Data Manager -->
+    <script>
+        class SimpleExcelDataManager {
+            constructor() {
+                this.employeesData = [];
+                this.processConditionsMi = [];
+                this.isLoaded = false;
+            }
+
+            async initialize() {
+                console.log('🚀 Simple Excel Manager: Initializing...');
+                try {
+                    await this.loadExcelFiles();
+                    return true;
+                } catch (error) {
+                    console.error('❌ Error loading Excel files:', error);
+                    this.createFallbackData();
+                    return false;
+                }
+            }
+
+            async loadExcelFiles() {
+                console.log('📊 Testing file access...');
+                
+                // Test file accessibility first
+                try {
+                    const empTest = await fetch('./data/employeelist.xlsx');
+                    const condTest = await fetch('./data/paramtermi.xlsx');
+                    
+                    console.log('📋 Employees file:', empTest.status);
+                    console.log('📊 Conditions file:', condTest.status);
+                    
+                    if (empTest.ok && condTest.ok) {
+                        console.log('✅ Both files accessible, loading...');
+                        
+                        const [employeesData, conditionsData] = await Promise.all([
+                            this.loadEmployeesData(),
+                            this.loadProcessConditionsMi()
+                        ]);
+
+                        this.employeesData = employeesData;
+                        this.processConditionsMi = conditionsData;
+                        this.isLoaded = true;
+                        
+                        console.log(`✅ SUCCESS: Loaded ${this.employeesData.length} employees and ${this.processConditionsMi.length} conditions`);
+                    } else {
+                        throw new Error('Files not accessible');
+                    }
+                } catch (error) {
+                    console.error('📁 File access failed:', error);
+                    throw error;
+                }
+            }
+
+            async loadEmployeesData() {
+                const response = await fetch('./data/employeelist.xlsx');
+                const arrayBuffer = await response.arrayBuffer();
+                const workbook = XLSX.read(arrayBuffer, { type: 'array' });
+                const worksheet = workbook.Sheets[workbook.SheetNames[0]];
+                const rawData = XLSX.utils.sheet_to_json(worksheet, { header: 1 });
+                
+                const employees = [];
+                for (let i = 1; i < rawData.length; i++) {
+                    const row = rawData[i];
+                    if (row.length === 0 || !row[2]) continue;
+                    
+                    employees.push({
+                        stt: row[0] || '',
+                        site: row[1] || '',
+                        id: row[2] || '',
+                        name: row[3] || '',
+                        email: row[4] || '',
+                        group: row[5] || '',
+                        role: row[6] || '',
+                        active: true,
+                        password: '123',
+                        permissions: row[6] === 'Quản lý' ? ['read', 'write', 'delete', 'admin'] : ['read', 'write']
+                    });
+                }
+                
+                return employees;
+            }
+
+            async loadProcessConditionsMi() {
+                const response = await fetch('./data/paramtermi.xlsx');
+                const arrayBuffer = await response.arrayBuffer();
+                const workbook = XLSX.read(arrayBuffer, { type: 'array' });
+                const worksheet = workbook.Sheets[workbook.SheetNames[0]];
+                const rawData = XLSX.utils.sheet_to_json(worksheet, { header: 1 });
+                
+                const conditions = [];
+                for (let i = 1; i < rawData.length; i++) {
+                    const row = rawData[i];
+                    if (row.length === 0 || !row[4]) continue;
+                    
+                    const maDKSX = row[4] || '';
+                    let line = '';
+                    const lineMatch = maDKSX.match(/-L(\d+)/i) || maDKSX.match(/LINE (\d+)/i) || maDKSX.match(/L(\d+)/i);
+                    if (lineMatch) {
+                        line = `L${lineMatch[1]}`;
+                    }
+
+                    conditions.push({
+                        stt: row[0] || '',
+                        site: row[1] || '',
+                        brand: row[2] || '',
+                        productName: row[3] || '',
+                        item: row[4] || '',
+                        maDKSX: row[5] || '',
+                        powder: row[6] || '',
+                        unifiedName: row[7] || '',
+                        line: line,
+                        tempRanges: {
+                            dauMin: this.parseNumber(row[8]),
+                            dauMax: this.parseNumber(row[9]),
+                            giua1Min: this.parseNumber(row[10]),
+                            giua1Max: this.parseNumber(row[11]),
+                            giua2Min: this.parseNumber(row[12]),
+                            giua2Max: this.parseNumber(row[13]),
+                            giua3Min: this.parseNumber(row[14]),
+                            giua3Max: this.parseNumber(row[15]),
+                            cuoiMin: this.parseNumber(row[16]),
+                            cuoiMax: this.parseNumber(row[17])
+                        },
+                        thicknessRange: {
+                            min: this.parseNumber(row[18]),
+                            max: this.parseNumber(row[19])
+                        },
+                        brixKansui: {
+                            min: this.parseNumber(row[20]),
+                            max: this.parseNumber(row[21])
+                        },
+                        tempKansui: {
+                            min: this.parseNumber(row[22]),
+                            max: this.parseNumber(row[23])
+                        },
+                        brixSea: {
+                            min: this.parseNumber(row[24]),
+                            max: this.parseNumber(row[25])
+                        }
+                    });
+                }
+                
+                return conditions;
+            }
+
+            parseNumber(value) {
+                if (value === null || value === undefined || value === '') return null;
+                const parsed = parseFloat(value);
+                return isNaN(parsed) ? null : parsed;
+            }
+
+            createFallbackData() {
+                console.log('📊 Creating FIXED fallback data...');
+                
+                this.employeesData = [
+                    {
+                        id: "15MB00270",
+                        name: "Ta Thị Thái",
+                        site: "MMB",
+                        group: "Mì",
+                        role: "Nhân viên",
+                        active: true,
+                        password: '123',
+                        permissions: ['read', 'write']
+                    },
+                    {
+                        id: "17MB01251", 
+                        name: "Lê Khoa",
+                        site: "MMB",
+                        group: "Mâm, CSD",
+                        role: "Quản lý",
+                        active: true,
+                        password: '123',
+                        permissions: ['read', 'write', 'delete', 'admin']
+                    }
+                ];
+
+                // FIXED: Complete fallback data with all required fields
+                this.processConditionsMi = [
+                    {
+                        maDKSX: "99PH00090",
+                        unifiedName: "KKM65 MB TCC",
+                        site: "MMB",
+                        line: "L6",
+                        brand: "KOKOMI",
+                        productName: "Phôi mì KOKOMI TÔM",
+                        tempRanges: {
+                            dauMin: 124,
+                            dauMax: 126,
+                            giua1Min: 154,
+                            giua1Max: 156,
+                            giua2Min: 149,
+                            giua2Max: 151,
+                            giua3Min: 164,
+                            giua3Max: 166,
+                            cuoiMin: 170,
+                            cuoiMax: 172
+                        },
+                        thicknessRange: {
+                            min: 0.88,
+                            max: 0.91
+                        },
+                        brixKansui: {
+                            min: 8.0,
+                            max: 8.3
+                        },
+                        tempKansui: {
+                            min: 14,
+                            max: 16
+                        },
+                        brixSea: {
+                            min: 5.2,
+                            max: 5.6
+                        }
+                    }
+                ];
+
+                this.isLoaded = true;
+                console.log('✅ Fallback data created with complete structure');
+            }
+
+            // Helper methods
+            getSites() {
+                const sites = [...new Set(this.employeesData.map(emp => emp.site))];
+                return sites.filter(site => site).sort();
+            }
+
+            getEmployeesBySite(site) {
+                return this.employeesData.filter(emp => emp.site === site && emp.active);
+            }
+
+            getLinesBySite(site) {
+                const lines = [...new Set(this.processConditionsMi.filter(cond => cond.site === site && cond.line).map(cond => cond.line))];
+                return lines.sort();
+            }
+
+            getDKSXByLineAndSite(site, line) {
+                return this.processConditionsMi.filter(cond => cond.site === site && (cond.line === line || !line));
+            }
+
+            getConditionByDKSX(maDKSX) {
+                return this.processConditionsMi.find(cond => cond.maDKSX === maDKSX);
+            }
+
+            getFormattedParametersForSharePoint() {
+                return this.processConditionsMi.map(cond => ({
+                    id: `param_${cond.maDKSX}`,
+                    fields: {
+                        'M_x00e3__x0020__x0110_KSX': cond.maDKSX,
+                        'T_x00ea_n_x0020_tr_x00ea_n_x00': cond.unifiedName,
+                        'Site': cond.site,
+                        'Line': cond.line,
+                        'Brix_x0020_Kansui_x0020_Min': cond.brixKansui?.min,
+                        'Brix_x0020_Kansui_x0020_Max': cond.brixKansui?.max,
+                        'Nhi_x1ec7_t_x0020_Kanshui_x00': cond.tempKansui?.min,
+                        'Nhi_x1ec7_t_x0020_Kanshui_x000': cond.tempKansui?.max,
+                        'Brix_x0020_Sea_x0020_Min': cond.brixSea?.min,
+                        'Brix_x0020_Sea_x0020_Max': cond.brixSea?.max,
+                        '_x0110__x1ed9__x0020_d_x00e0_y_x0': cond.thicknessRange?.min,
+                        '_x0110__x1ed9__x0020_d_x00e0_y_x1': cond.thicknessRange?.max,
+                        'Nhi_x1ec7_t_x0020__x0110__x1ea7_': cond.tempRanges?.dauMin,
+                        'Nhi_x1ec7_t_x0020__x0110__x1ea7_0': cond.tempRanges?.dauMax,
+                        'Nhi_x1ec7_t_x0020_Gi_x1eef_a_x0': cond.tempRanges?.giua1Min,
+                        'Nhi_x1ec7_t_x0020_Gi_x1eef_a_x00': cond.tempRanges?.giua1Max,
+                        'Nhi_x1ec7_t_x0020_Cu_x1ed1_i_x0': cond.tempRanges?.cuoiMin,
+                        'Nhi_x1ec7_t_x0020_Cu_x1ed1_i_x00': cond.tempRanges?.cuoiMax
+                    }
+                }));
+            }
+        }
+
+        // Create global instance
+        window.excelDataManager = new SimpleExcelDataManager();
+        
+        // SharePoint mock
+        window.sharepointManager = {
+            initializeMock: async () => true,
+            createItem: async (data) => {
+                console.log('💾 Saving data:', data);
+                return { success: true, id: Date.now() };
+            }
+        };
+    </script>
+
+    <!-- Component System -->
+    <script src="js/component-loader.js"></script>
+    <script src="js/process-data-component.js"></script>
+
+    <!-- Test Functions -->
+    <script>
+        async function testExcelData() {
+            console.log('🧪 TESTING EXCEL DATA...');
+            
+            try {
+                await excelDataManager.initialize();
+                
+                const data = {
+                    employees: excelDataManager.employeesData,
+                    conditions: excelDataManager.processConditionsMi,
+                    sites: excelDataManager.getSites(),
+                    isLoaded: excelDataManager.isLoaded
+                };
+                
+                console.log('📊 Excel Data Test Results:', data);
+                
+                // Test form loading
+                const container = document.getElementById('contentContainer');
+                await componentLoader.load('process-data', container);
+                
+                alert(`✅ Test Complete!\n\nEmployees: ${data.employees.length}\nConditions: ${data.conditions.length}\nSites: ${data.sites.join(', ')}\n\nCheck console for details.`);
+                
+            } catch (error) {
+                console.error('❌ Test failed:', error);
+                alert('❌ Test failed: ' + error.message);
+            }
+        }
+
+        // Auto-initialize
+        document.addEventListener('DOMContentLoaded', async () => {
+            console.log('🚀 Simple Test App Starting...');
+            await excelDataManager.initialize();
+            
+            // Load form immediately
+            const container = document.getElementById('contentContainer');
+            await componentLoader.load('process-data', container);
+        });
+
+        // Navigation
+        document.querySelectorAll('.nav-link').forEach(link => {
+            link.addEventListener('click', async (e) => {
+                e.preventDefault();
+                const page = link.dataset.page;
+                if (page === 'process-data') {
+                    const container = document.getElementById('contentContainer');
+                    await componentLoader.load('process-data', container);
+                }
+            });
+        });
+    </script>
+</body>
+</html>
