@@ -1,9 +1,10 @@
-// js/excel-data-manager.js - Excel Data Management for QA System
+// js/excel-data-manager.js - Excel Data Management for QA System - FIXED VERSION
 
 class ExcelDataManager {
     constructor() {
         this.employeesData = [];
         this.processConditionsMi = [];
+        this.processConditionsPho = [];
         this.isLoaded = false;
         this.loadingPromise = null;
     }
@@ -23,22 +24,35 @@ class ExcelDataManager {
 
     async loadExcelFiles() {
         try {
-            console.log('Loading Excel files...');
+            // Check if XLSX library is available
+            if (typeof XLSX === 'undefined') {
+                throw new Error('XLSX library not loaded. Please add XLSX script to your HTML.');
+            }
             
-            // Load both Excel files in parallel
-            const [employeesData, conditionsData] = await Promise.all([
+            console.log('📊 Loading Excel files...');
+            
+            // Debug: Log the exact paths being used
+            console.log('📊 Attempting to load:');
+            console.log('- Employees: ./data/employeelist.xlsx');
+            console.log('- Conditions Mi: ./data/paramtermi.xlsx');
+            console.log('- Conditions Pho: ./data/parameterpho.xlsx');
+            
+            // Load Excel files in parallel
+            const [employeesData, conditionsMiData, conditionsPhoData] = await Promise.all([
                 this.loadEmployeesData(),
-                this.loadProcessConditionsMi()
+                this.loadProcessConditionsMi(),
+                this.loadProcessConditionsPho()
             ]);
 
             this.employeesData = employeesData;
-            this.processConditionsMi = conditionsData;
+            this.processConditionsMi = conditionsMiData;
+            this.processConditionsPho = conditionsPhoData;
             this.isLoaded = true;
 
-            console.log(`Loaded ${this.employeesData.length} employees and ${this.processConditionsMi.length} process conditions`);
+            console.log(`✅ Successfully loaded ${this.employeesData.length} employees, ${this.processConditionsMi.length} Mi conditions, and ${this.processConditionsPho.length} Pho conditions`);
             return true;
         } catch (error) {
-            console.error('Error loading Excel files:', error);
+            console.error('❌ Error loading Excel files:', error);
             // Fallback to mock data if Excel loading fails
             this.createFallbackData();
             return false;
@@ -47,7 +61,8 @@ class ExcelDataManager {
 
     async loadEmployeesData() {
         try {
-            const response = await fetch('/Danh sách nhân viên.xlsx');
+            console.log('📋 Loading employees data from: ./data/employeelist.xlsx');
+            const response = await fetch('./data/employeelist.xlsx');
             if (!response.ok) {
                 throw new Error(`Failed to load employees file: ${response.status}`);
             }
@@ -65,6 +80,7 @@ class ExcelDataManager {
             // Skip header row and process data
             const employees = [];
             const headers = rawData[0];
+            console.log('📋 Employee headers:', headers);
             
             for (let i = 1; i < rawData.length; i++) {
                 const row = rawData[i];
@@ -86,19 +102,20 @@ class ExcelDataManager {
                 employees.push(employee);
             }
 
-            console.log(`Loaded ${employees.length} employees from Excel`);
+            console.log(`✅ Loaded ${employees.length} employees from Excel`);
             return employees;
         } catch (error) {
-            console.error('Error loading employees data:', error);
+            console.error('❌ Error loading employees data:', error);
             throw error;
         }
     }
 
     async loadProcessConditionsMi() {
         try {
-            const response = await fetch('/Data DKSX Mì.xlsx');
+            console.log('📊 Loading Mi process conditions from: ./data/paramtermi.xlsx');
+            const response = await fetch('./data/paramtermi.xlsx');
             if (!response.ok) {
-                throw new Error(`Failed to load process conditions file: ${response.status}`);
+                throw new Error(`Failed to load Mi process conditions file: ${response.status}`);
             }
 
             const arrayBuffer = await response.arrayBuffer();
@@ -107,6 +124,7 @@ class ExcelDataManager {
             // Get first worksheet
             const worksheetName = workbook.SheetNames[0];
             const worksheet = workbook.Sheets[worksheetName];
+            console.log('📊 Mi Worksheet name:', worksheetName);
             
             // Convert to JSON with header row
             const rawData = XLSX.utils.sheet_to_json(worksheet, { header: 1 });
@@ -114,6 +132,7 @@ class ExcelDataManager {
             // Process headers and data
             const conditions = [];
             const headers = rawData[0];
+            console.log('📊 Mi Conditions headers:', headers);
             
             for (let i = 1; i < rawData.length; i++) {
                 const row = rawData[i];
@@ -189,11 +208,86 @@ class ExcelDataManager {
                 conditions.push(condition);
             }
 
-            console.log(`Loaded ${conditions.length} process conditions from Excel`);
+            console.log(`✅ Loaded ${conditions.length} Mi process conditions from Excel`);
+            if (conditions.length > 0) {
+                console.log('📊 Sample Mi condition:', conditions[0]);
+            }
             return conditions;
         } catch (error) {
-            console.error('Error loading process conditions data:', error);
+            console.error('❌ Error loading Mi process conditions data:', error);
             throw error;
+        }
+    }
+
+    async loadProcessConditionsPho() {
+        try {
+            console.log('📊 Loading Pho process conditions from: ./data/parameterpho.xlsx');
+            const response = await fetch('./data/parameterpho.xlsx');
+            if (!response.ok) {
+                console.warn(`⚠️ Pho conditions file not found: ${response.status} - skipping`);
+                return []; // Return empty array if file not found
+            }
+
+            const arrayBuffer = await response.arrayBuffer();
+            const workbook = XLSX.read(arrayBuffer, { type: 'array' });
+            
+            // Get first worksheet
+            const worksheetName = workbook.SheetNames[0];
+            const worksheet = workbook.Sheets[worksheetName];
+            console.log('📊 Pho Worksheet name:', worksheetName);
+            
+            // Convert to JSON with header row
+            const rawData = XLSX.utils.sheet_to_json(worksheet, { header: 1 });
+            
+            // Process headers and data
+            const conditions = [];
+            const headers = rawData[0];
+            console.log('📊 Pho Conditions headers:', headers);
+            
+            for (let i = 1; i < rawData.length; i++) {
+                const row = rawData[i];
+                if (row.length === 0 || !row[4]) continue; // Skip empty rows or rows without Mã DKSX
+                
+                const condition = {
+                    id: row[0] || '',
+                    site: row[1] || '',
+                    brand: row[2] || '',
+                    productName: row[3] || '',
+                    item: row[4] || '',
+                    maDKSX: row[5] || '',
+                    gao: row[6] || '',
+                    unifiedName: row[7] || '',
+                    
+                    // Pho specific parameters
+                    baumeKansui: {
+                        min: this.parseNumber(row[8]),
+                        max: this.parseNumber(row[9])
+                    },
+                    
+                    baumeDichTrang: {
+                        min: this.parseNumber(row[10]),
+                        max: this.parseNumber(row[11])
+                    },
+                    
+                    thicknessAfterSteam: {
+                        min: this.parseNumber(row[12]),
+                        max: this.parseNumber(row[13])
+                    },
+                    
+                    moistureMax: this.parseNumber(row[14])
+                };
+                
+                conditions.push(condition);
+            }
+
+            console.log(`✅ Loaded ${conditions.length} Pho process conditions from Excel`);
+            if (conditions.length > 0) {
+                console.log('📊 Sample Pho condition:', conditions[0]);
+            }
+            return conditions;
+        } catch (error) {
+            console.error('❌ Error loading Pho process conditions data:', error);
+            return []; // Return empty array on error
         }
     }
 
@@ -204,7 +298,7 @@ class ExcelDataManager {
     }
 
     createFallbackData() {
-        console.log('Creating fallback mock data...');
+        console.log('📊 Creating fallback mock data...');
         
         // Fallback employees data
         this.employeesData = [
@@ -214,7 +308,9 @@ class ExcelDataManager {
                 site: "MMB",
                 group: "Mì",
                 role: "Nhân viên",
-                active: true
+                active: true,
+                password: '123',
+                permissions: ['read', 'write']
             },
             {
                 id: "17MB01251",
@@ -222,7 +318,9 @@ class ExcelDataManager {
                 site: "MMB",
                 group: "Mâm, CSD",
                 role: "Quản lý",
-                active: true
+                active: true,
+                password: '123',
+                permissions: ['read', 'write', 'delete', 'admin']
             }
         ];
 
@@ -236,10 +334,18 @@ class ExcelDataManager {
                 brixKansui: { min: 8.0, max: 8.3 },
                 tempKansui: { min: 14, max: 16 },
                 brixSea: { min: 5.2, max: 5.6 },
-                thicknessRange: { min: 0.88, max: 0.91 }
+                thicknessRange: { min: 0.88, max: 0.91 },
+                tempRanges: {
+                    dauMin: 124, dauMax: 126,
+                    giua1Min: 154, giua1Max: 156,
+                    giua2Min: 149, giua2Max: 151,
+                    giua3Min: 164, giua3Max: 166,
+                    cuoiMin: 170, cuoiMax: 172
+                }
             }
         ];
 
+        this.processConditionsPho = [];
         this.isLoaded = true;
     }
 
@@ -271,6 +377,15 @@ class ExcelDataManager {
 
     getConditionByDKSX(maDKSX) {
         return this.processConditionsMi.find(cond => cond.maDKSX === maDKSX);
+    }
+
+    // Pho-specific methods
+    getPhoConditionByDKSX(maDKSX) {
+        return this.processConditionsPho.find(cond => cond.maDKSX === maDKSX);
+    }
+
+    getPhoDKSXBySite(site) {
+        return this.processConditionsPho.filter(cond => cond.site === site);
     }
 
     // Get all process conditions formatted for SharePoint compatibility
@@ -312,7 +427,7 @@ class ExcelDataManager {
             }));
             
             employeeManager.employees = updatedEmployees;
-            console.log(`Updated employee manager with ${updatedEmployees.length} employees from Excel`);
+            console.log(`✅ Updated employee manager with ${updatedEmployees.length} employees from Excel`);
         }
     }
 
@@ -320,10 +435,30 @@ class ExcelDataManager {
     exportData() {
         return {
             employees: this.employeesData,
-            conditions: this.processConditionsMi,
+            conditionsMi: this.processConditionsMi,
+            conditionsPho: this.processConditionsPho,
             sites: this.getSites(),
             isLoaded: this.isLoaded
         };
+    }
+
+    // Debug method to test file accessibility
+    async testFileAccess() {
+        const files = [
+            './data/employeelist.xlsx',
+            './data/paramtermi.xlsx', 
+            './data/parameterpho.xlsx'
+        ];
+        
+        console.log('🔍 Testing file accessibility...');
+        for (const file of files) {
+            try {
+                const response = await fetch(file);
+                console.log(`✅ ${file}: ${response.status} ${response.statusText}`);
+            } catch (error) {
+                console.log(`❌ ${file}: ${error.message}`);
+            }
+        }
     }
 }
 
